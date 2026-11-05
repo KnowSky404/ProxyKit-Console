@@ -41,6 +41,12 @@ Public V1 不需要账号、Token 或环境变量，直接使用提交的 catalo
 
 TypeScript 固定 6.0.3，因为当前 typescript-eslint 尚不支持 TS 7。按本项目 cf CLI 要求使用 `cloudflare.config.ts`；cf 和官方 Vite 2 集成目前为 beta，版本已锁定并验证构建/本地运行，其余主框架采用稳定版。不要混用 Wrangler 配置。升级时一起验证工具链兼容性。
 
+## 开发工作流
+
+所有功能迭代、问题修复、文档及配置维护都必须在独立任务分支的 **worktree** 中完成。每次推送（包括修复推送）及创建 PR 前，先本地 `/review`（CLI：`codex review --base <target-ref>`），修复发现的问题并完成检查；后续修改或 rebase 后须重新 review。随后推送分支并提交 PR。
+
+等待 CI 及自动触发的 Codex review，解决问题后使用 **rebase merge** 合并，并删除本任务的远端/本地分支及干净的 worktree。禁止手动触发 Codex 机器人；CI 完成并检查 PR 审查活动后仍未自动触发时，直接按其余合并条件处理。此流程已授权任务分支推送、PR、合并及合并后清理；详细门禁与异常处理见 [开发约束](AGENTS.md#git-prs-and-documentation)。
+
 ## 部署
 
 本次没有部署、创建 Cloudflare 资源或修改域名。完成账号授权后，维护者可执行：
