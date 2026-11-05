@@ -1,0 +1,10 @@
+node_modules
+bun.lock
+dist
+.cloudflare
+.wrangler
+.cache
+coverage
+playwright-report
+test-results
+worker-configuration.d.ts
