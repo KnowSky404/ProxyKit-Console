@@ -5,6 +5,7 @@ import { filterResources } from '../lib/catalog';
 import { ResourceList } from '../features/catalog/ResourceList';
 import { ResourceDetail } from '../features/preview/ResourceDetail';
 import { PrivateState } from '../features/gateways/PrivateState';
+import { Icon } from '../components/Icon';
 
 function initialTheme(): string {
   try {
@@ -54,7 +55,7 @@ export function App({
     return () => controller.abort();
   }, [provider, attempt]);
   const visible = filterResources(resources, query, platform, category);
-  const selected = visible.find((r) => r.id === selectedId) ?? visible[0];
+  const selected = visible.find((r) => r.id === selectedId);
   return (
     <>
       <a className="skip-link" href="#main">
@@ -63,7 +64,9 @@ export function App({
       <header className="topbar">
         <a className="brand" href="/">
           <span className="monogram" aria-hidden="true">
-            P
+            <svg viewBox="0 0 32 36" width="30" height="34" fill="currentColor">
+              <path d="M2 9 17 0l13 8v17l-13 8v-9l6-4v-8l-6-4-7 4v19l-8 5z" />
+            </svg>
           </span>
           ProxyKit Console
         </a>
@@ -90,10 +93,11 @@ export function App({
             <option disabled>Gateway connections · planned</option>
           </select>
           <button
+            className="theme-toggle"
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           >
-            {theme === 'light' ? '☼ Light' : '☾ Dark'}
+            <Icon name={theme === 'light' ? 'sun' : 'moon'} />
           </button>
         </div>
       </header>
@@ -110,7 +114,7 @@ export function App({
             </div>
             <div className="filters">
               <label className="search">
-                <span aria-hidden="true">⌕</span>
+                <Icon name="search" />
                 <input
                   aria-label="Search resources"
                   placeholder="Search resources"
@@ -119,19 +123,24 @@ export function App({
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </label>
-              <label className="sr-only" htmlFor="platform">
-                Platform
-              </label>
-              <select
-                id="platform"
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
+              <div
+                className="platform-filters"
+                role="group"
+                aria-label="Platform"
               >
-                <option value="">All platforms</option>
-                {['Loon', 'Quantumult X', 'sing-box'].map((p) => (
-                  <option key={p}>{p}</option>
+                {['', 'Loon', 'Quantumult X', 'sing-box'].map((p) => (
+                  <button
+                    key={p}
+                    aria-pressed={platform === p}
+                    onClick={() => {
+                      setPlatform(p);
+                      setSelectedId('');
+                    }}
+                  >
+                    {p || 'All platforms'}
+                  </button>
                 ))}
-              </select>
+              </div>
               <label className="sr-only" htmlFor="category">
                 Category
               </label>
@@ -174,22 +183,15 @@ export function App({
                   {visible.length} resources{platform ? ` · ${platform}` : ''}
                 </p>
                 <div className="workspace">
-                  <ResourceList
-                    resources={visible}
-                    selectedId={selected?.id}
-                    onSelect={setSelectedId}
-                  />
+                  <ResourceList resources={visible} onSelect={setSelectedId} />
                   {selected ? (
                     <ResourceDetail
                       key={selected.id}
                       resource={selected}
                       provider={provider}
+                      onClose={() => setSelectedId('')}
                     />
-                  ) : (
-                    <div className="detail panel empty">
-                      Select different filters to browse available resources.
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </>
             )}

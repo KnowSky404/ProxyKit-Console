@@ -1,4 +1,5 @@
 import { parseCatalog } from '../lib/catalog';
+import { PREVIEW_LIMIT } from '../config/sources';
 import type { ResourceDetail, ResourceProvider } from '../types/resource';
 async function api(path: string, signal?: AbortSignal): Promise<unknown> {
   const response = await fetch(path, { signal });
@@ -22,9 +23,44 @@ export const publicProvider: ResourceProvider = {
     return parseCatalog(await api('/api/catalog', signal)).resources;
   },
   async getResource(id, signal) {
-    return (await api(
+    const input = await api(
       `/api/resource?id=${encodeURIComponent(id)}`,
       signal,
-    )) as ResourceDetail;
+    );
+    if (
+      !input ||
+      typeof input !== 'object' ||
+      !('resource' in input) ||
+      !('content' in input)
+    )
+      throw new Error('Invalid resource response');
+    const candidate = input.resource;
+    if (
+      !candidate ||
+      typeof candidate !== 'object' ||
+      !('revision' in candidate) ||
+      !('updatedAt' in candidate)
+    )
+      throw new Error('Invalid resource response');
+    const resource = parseCatalog({
+      schemaVersion: 1,
+      revision: candidate.revision,
+      updatedAt: candidate.updatedAt,
+      resources: [candidate],
+    }).resources[0];
+    if (
+      resource.id !== id ||
+      (resource.format === 'srs'
+        ? input.content !== null
+        : typeof input.content !== 'string' ||
+          input.content.includes('\0') ||
+          new TextEncoder().encode(input.content).byteLength > PREVIEW_LIMIT)
+    )
+      throw new Error('Invalid resource response');
+    const detail: ResourceDetail = {
+      resource,
+      content: typeof input.content === 'string' ? input.content : null,
+    };
+    return detail;
   },
 };

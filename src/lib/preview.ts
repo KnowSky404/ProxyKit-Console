@@ -1,7 +1,11 @@
 import { PREVIEW_LIMIT } from '../config/sources';
 export class ResourceError extends Error {
   constructor(
-    public code: string,
+    public code:
+      | 'resource_not_found'
+      | 'upstream_unavailable'
+      | 'preview_too_large'
+      | 'unsupported_text',
     public status: number,
   ) {
     super(code);

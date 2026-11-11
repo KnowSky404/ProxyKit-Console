@@ -28,7 +28,7 @@ export function CopyButton({
         {children}
       </button>
       <span role="status" className="copy-feedback">
-        {feedback}
+        {feedback && <span>{feedback}</span>}
       </span>
     </span>
   );
