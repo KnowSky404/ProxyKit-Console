@@ -35,7 +35,7 @@ afterEach(cleanup);
 it('searches, filters, previews, copies and generates user-selected policy', async () => {
   const user = userEvent.setup();
   render(<App provider={provider} />);
-  await screen.findByText('34 resources');
+  await screen.findByText('27 resources · 34 files');
   await user.click(screen.getByRole('button', { name: /^Quantumult X$/ }));
   await user.type(screen.getByRole('searchbox'), 'wise');
   await user.click(
@@ -70,7 +70,7 @@ it('searches, filters, previews, copies and generates user-selected policy', asy
 it('shows binary download without a text preview', async () => {
   const user = userEvent.setup();
   render(<App provider={provider} />);
-  await screen.findByText('34 resources');
+  await screen.findByText('27 resources · 34 files');
   await user.selectOptions(
     screen.getByLabelText('Category'),
     'Binary Rule Set',
@@ -117,7 +117,7 @@ it('reports preview failure and retries', async () => {
       }}
     />,
   );
-  await screen.findByText('34 resources');
+  await screen.findByText('27 resources · 34 files');
   await user.click(
     screen.getAllByRole('button', { name: 'View Sidestore details' })[0],
   );
@@ -134,7 +134,7 @@ it('copies from a card without fetching a preview, and aborts preview on close',
     return new Promise(() => {});
   });
   render(<App provider={{ ...provider, getResource }} />);
-  await screen.findByText('34 resources');
+  await screen.findByText('27 resources · 34 files');
   const card = screen.getByRole('article', {
     name: 'Sidestore · Loon · Plugin',
   });
@@ -163,4 +163,79 @@ it('falls back to the file icon when an image is missing or no icon is mapped', 
   expect(container.querySelector('svg')).not.toBeNull();
   rerender(<ResourceIcon resource={{ ...resources[0], icon: undefined }} />);
   expect(container.querySelector('svg')).not.toBeNull();
+});
+
+it('shows one sing-box card per rule and copies/opens the selected real format', async () => {
+  const user = userEvent.setup();
+  const getResource = vi.fn<ResourceProvider['getResource']>(async (id) => ({
+    resource: resources.find((r) => r.id === id)!,
+    content: id.endsWith('.srs') ? null : 'Test-only JSON preview',
+  }));
+  render(<App provider={{ ...provider, getResource }} />);
+  await screen.findByText('27 resources · 34 files');
+  await user.click(screen.getByRole('button', { name: /^sing-box$/ }));
+  expect(screen.getByText('7 resources · 14 files · sing-box')).toBeVisible();
+  expect(
+    within(screen.getByRole('region', { name: 'Resources' })).getAllByRole(
+      'article',
+    ),
+  ).toHaveLength(7);
+  const card = screen.getByRole('article', {
+    name: 'Wise · sing-box · Rule Set',
+  });
+  const format = within(card).getByRole('combobox', { name: 'Wise format' });
+  expect(format).toHaveValue('json');
+  await user.click(within(card).getByRole('button', { name: 'Copy URL' }));
+  expect(await navigator.clipboard.readText()).toBe(
+    'https://raw.githubusercontent.com/KnowSky404/ProxyKit/main/sing-box/rules/wise.json',
+  );
+  expect(getResource).not.toHaveBeenCalled();
+  await user.selectOptions(format, 'srs');
+  expect(within(card).queryByText('Copied')).not.toBeInTheDocument();
+  expect(card).toHaveTextContent('sing-box/rules/wise.srs');
+  await user.click(within(card).getByRole('button', { name: 'Copy URL' }));
+  expect(await navigator.clipboard.readText()).toBe(
+    'https://raw.githubusercontent.com/KnowSky404/ProxyKit/main/sing-box/rules/wise.srs',
+  );
+  await user.click(
+    within(card).getAllByRole('button', { name: 'View Wise details' })[0],
+  );
+  expect(getResource).toHaveBeenLastCalledWith(
+    'sing-box/rules/wise.srs',
+    expect.any(AbortSignal),
+  );
+  expect(
+    screen.queryByLabelText('Original file content'),
+  ).not.toBeInTheDocument();
+  await user.type(
+    screen.getByLabelText('Existing outbound name'),
+    'Test Outbound',
+  );
+  expect(
+    screen.getByRole('article', { name: 'Resource details' }),
+  ).toHaveTextContent('"format": "binary"');
+  await user.click(screen.getByRole('button', { name: 'Close details' }));
+  await user.selectOptions(format, 'json');
+  await user.click(
+    within(card).getAllByRole('button', { name: 'View Wise details' })[0],
+  );
+  expect(
+    await screen.findByLabelText('Original file content'),
+  ).toHaveTextContent('Test-only JSON preview');
+  await user.type(
+    screen.getByLabelText('Existing outbound name'),
+    'Test Outbound',
+  );
+  expect(
+    screen.getByRole('article', { name: 'Resource details' }),
+  ).toHaveTextContent('"format": "source"');
+  await user.click(screen.getByRole('button', { name: 'Close details' }));
+  await user.type(screen.getByRole('searchbox'), 'wise.srs');
+  expect(screen.getByText('1 resources · sing-box')).toBeVisible();
+  expect(
+    screen.queryByRole('combobox', { name: 'Wise format' }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('article', { name: 'Wise · sing-box · Binary Rule Set' }),
+  ).toHaveTextContent('wise.srs');
 });

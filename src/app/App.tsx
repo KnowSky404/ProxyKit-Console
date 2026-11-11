@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Resource, ResourceProvider } from '../types/resource';
 import { publicProvider } from '../providers/public';
-import { filterResources } from '../lib/catalog';
+import { filterResources, groupResources } from '../lib/catalog';
 import { ResourceList } from '../features/catalog/ResourceList';
 import { ResourceDetail } from '../features/preview/ResourceDetail';
 import { PrivateState } from '../features/gateways/PrivateState';
@@ -55,6 +55,7 @@ export function App({
     return () => controller.abort();
   }, [provider, attempt]);
   const visible = filterResources(resources, query, platform, category);
+  const groups = groupResources(visible);
   const selected = visible.find((r) => r.id === selectedId);
   return (
     <>
@@ -180,10 +181,14 @@ export function App({
             ) : (
               <>
                 <p className="result-count muted small" aria-live="polite">
-                  {visible.length} resources{platform ? ` · ${platform}` : ''}
+                  {groups.length} resources
+                  {groups.length !== visible.length
+                    ? ` · ${visible.length} files`
+                    : ''}
+                  {platform ? ` · ${platform}` : ''}
                 </p>
                 <div className="workspace">
-                  <ResourceList resources={visible} onSelect={setSelectedId} />
+                  <ResourceList groups={groups} onSelect={setSelectedId} />
                   {selected ? (
                     <ResourceDetail
                       key={selected.id}

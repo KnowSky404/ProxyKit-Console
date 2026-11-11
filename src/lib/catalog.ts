@@ -104,3 +104,26 @@ export function filterResources(
         .includes(search),
   );
 }
+
+export function groupResources(resources: Resource[]): Resource[][] {
+  const groups = new Map<string, Resource[]>();
+  for (const resource of resources) {
+    const path =
+      resource.platform === 'sing-box' &&
+      ['json', 'srs'].includes(resource.format)
+        ? resource.path.replace(/\.(json|srs)$/, '')
+        : resource.path;
+    const key = JSON.stringify([
+      resource.providerId,
+      resource.repository,
+      resource.revision,
+      resource.platform,
+      path,
+    ]);
+    const group = groups.get(key);
+    if (!group) groups.set(key, [resource]);
+    else if (resource.format === 'json') group.unshift(resource);
+    else group.push(resource);
+  }
+  return [...groups.values()];
+}
