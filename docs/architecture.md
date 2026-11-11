@@ -39,3 +39,9 @@ Worker 路由只接受 GET `/api/catalog` 和 `/api/resource`；其余 `/api/*` 
 资源卡片从目录元数据直接复制 URL；详情抽屉仅在点击后挂载并读取预览，关闭后取消请求。原生 dialog 提供焦点隔离和 Esc 关闭，键盘聚焦卡片会显示快捷操作，触屏操作常显；减少动态效果偏好会关闭位移动画。App 管理筛选和选中 ID，详情继续拥有预览状态。
 
 Resource 增加可选 icon 标识，保持 schemaVersion=1；类型白名单与同步脚本映射由 Console 维护，图片在同源静态资源目录，缺失时使用文件图标。目录和详情响应均校验，禁止远程 image URL 或 SVG 内容。API 字段、错误、版本兼容及边界详见 [Console API](console-api.md)，素材来源见 [图标说明](icons.md)。
+
+## sing-box 格式合并展示
+
+前端在搜索/平台/分类过滤后，将同一 Provider、repository、revision、平台与路径主干的 sing-box `.json` / `.srs` 分成一组，每组展示一张卡片。其他平台保留逐文件展示。卡片的局部格式偏好默认选 JSON（存在时），Format 选择器只列出现有的匹配文件；复制 URL、路径展示和打开详情都使用所选的真实 Resource。改变格式会重置复制反馈；详情继续由 App 的真实资源 ID 选择驱动，文本与二进制预览、配置片段不混用。
+
+UI 计数区分展示资源数与文件数。API、生成的 catalog、资源 ID 和 URL 契约保持逐文件语义；不增加聚合端点，也不从另一格式的 URL 拼接链接。仅一种格式的组不显示多格式选择器。

@@ -10,7 +10,7 @@ test('real catalog, filtering, binary handling, theme and private boundary', asy
   await expect(
     page.getByRole('heading', { name: 'Public resources' }),
   ).toBeVisible();
-  await expect(page.getByText('34 resources')).toBeVisible();
+  await expect(page.getByText('27 resources · 34 files')).toBeVisible();
   await page
     .getByRole('button', { name: 'View Sidestore details' })
     .first()
@@ -157,6 +157,77 @@ test('card actions work on hover, keyboard and touch; details restore focus', as
   await page.getByRole('searchbox').fill('');
   await page.getByRole('button', { name: 'Switch to dark theme' }).click();
   await expect(card).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test('sing-box pairs share a card and copy the chosen format on desktop and mobile', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  // Real metadata, inert preview fixture; no binary preview content is invented.
+  await page.route('**/api/resource?**', async (route) => {
+    const id = new URL(route.request().url()).searchParams.get('id');
+    const resource = catalog.resources.find((r) => r.id === id);
+    await route.fulfill({
+      json: {
+        resource,
+        content: resource?.format === 'srs' ? null : 'Test-only JSON preview',
+      },
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'sing-box', exact: true }).click();
+  await expect(
+    page.getByText('7 resources · 14 files · sing-box'),
+  ).toBeVisible();
+  await expect(page.locator('.resource-card')).toHaveCount(7);
+  const card = page.getByRole('article', {
+    name: 'Wise · sing-box · Rule Set',
+    exact: true,
+  });
+  await card.scrollIntoViewIfNeeded();
+  const format = card.getByRole('combobox', { name: 'Wise format' });
+  await expect(format).toHaveValue('json');
+  await card.hover();
+  await card.getByRole('button', { name: 'Copy URL', exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(
+      'https://raw.githubusercontent.com/KnowSky404/ProxyKit/main/sing-box/rules/wise.json',
+    );
+  await format.selectOption('srs');
+  await expect(card.getByRole('status')).toHaveText('');
+  await card.getByRole('button', { name: 'Copy URL', exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(
+      'https://raw.githubusercontent.com/KnowSky404/ProxyKit/main/sing-box/rules/wise.srs',
+    );
+  await card.locator('.card-main').click();
+  await expect(
+    page.getByRole('link', { name: /Download SRS/ }),
+  ).toHaveAttribute('href', /wise\.srs$/);
+  await expect(page.getByLabel('Original file content')).toHaveCount(0);
+  await page.getByLabel('Existing outbound name').fill('Test Outbound');
+  await expect(page.locator('.config-code')).toContainText(
+    '"format": "binary"',
+  );
+  await page.getByRole('button', { name: 'Close details' }).click();
+  await format.selectOption('json');
+  await card.locator('.card-main').click();
+  await expect(page.getByLabel('Original file content')).toHaveText(
+    'Test-only JSON preview',
+  );
+  await page.getByLabel('Existing outbound name').fill('Test Outbound');
+  await expect(page.locator('.config-code')).toContainText(
+    '"format": "source"',
+  );
+  await page.getByRole('button', { name: 'Close details' }).click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

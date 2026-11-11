@@ -8,6 +8,8 @@ V1 是独立部署的 **Public 资源浏览与复制控制台**，不是规则�
 
 已实现响应式资源卡片画廊、资源图标、全局搜索、平台/分类过滤、按需详情抽屉、文本预览、内容/URL/配置复制、SRS 下载链接、浅深色主题及移动端布局。桌面卡片 hover 或键盘聚焦时显示复制操作，触屏直接显示；点击详情才读取预览，Esc/关闭按钮可返回卡片。Loon Remote Rule、QX filter_remote（用户输入 force-policy）、sing-box source/binary route.rule_set 均提供片段；脚本和插件仅提供 URL 与使用限制。策略必须来自用户输入，不默认绑定 DIRECT/PROXY。
 
+sing-box 同一路径主干的 JSON 与二进制 SRS 在画廊合并为一张卡片，通过卡片的 Format 选择后复制对应 URL 或打开对应文件详情。当前 34 个文件展示为 27 张卡片，其中 sing-box 为 7 张卡片／14 个文件；API 仍逐文件返回，缺少配对文件时不会虚构另一格式。分类和路径搜索先按文件筛选，再合并展示。
+
 React + TypeScript + Vite + Tailwind CSS；同一个 Cloudflare Worker 提供静态资源与 Console API。Bun 管理精确锁定的依赖；Vitest、Testing Library、Playwright、ESLint、Prettier 和 GitHub Actions 提供质量检查。没有数据库、后台进程或外部缓存服务。
 
 ## 快速开始

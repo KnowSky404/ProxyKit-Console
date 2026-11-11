@@ -3,6 +3,7 @@ import catalog from '../src/config/catalog.json';
 import {
   classifyPath,
   filterResources,
+  groupResources,
   parseCatalog,
   subscriptionUrl,
 } from '../src/lib/catalog';
@@ -116,4 +117,43 @@ it('supports optional reviewed icon IDs, rejects image URLs and ships every mapp
   for (const icon of RESOURCE_ICON_IDS)
     expect(existsSync(`public/icons/${icon}.svg`)).toBe(true);
   for (const r of catalog.resources) expect(r.icon).toBe(resourceIcon(r.path));
+});
+
+it('groups only matching sing-box file stems, defaults to JSON and preserves real variants', () => {
+  const resources = parseCatalog(catalog).resources;
+  const groups = groupResources(resources);
+  expect(groups).toHaveLength(27);
+  expect(
+    groups.filter((group) => group[0].platform === 'sing-box'),
+  ).toHaveLength(7);
+  expect(
+    groups
+      .filter((group) => group[0].platform !== 'sing-box')
+      .every((group) => group.length === 1),
+  ).toBe(true);
+  const json = resources.find((r) => r.path === 'sing-box/rules/wise.json')!;
+  const binary = resources.find((r) => r.path === 'sing-box/rules/wise.srs')!;
+  const reversed = [binary, json];
+  expect(groupResources(reversed)).toEqual([[json, binary]]);
+  expect(reversed).toEqual([binary, json]);
+  expect(groupResources([json])).toEqual([[json]]);
+  expect(groupResources([binary])).toEqual([[binary]]);
+  expect(groupResources([])).toEqual([]);
+  const other = resources.find((r) => r.path === 'sing-box/rules/binance.srs')!;
+  expect(groupResources([json, { ...other, name: json.name }])).toHaveLength(2);
+  for (const change of [
+    { providerId: 'other' },
+    { repository: 'other/repo' },
+    { revision: 'a'.repeat(40) },
+  ]) {
+    expect(groupResources([json, { ...binary, ...change }])).toHaveLength(2);
+  }
+  expect(
+    groupResources(filterResources(resources, 'wise.srs', 'sing-box', '')),
+  ).toEqual([[binary]]);
+  expect(
+    groupResources(
+      filterResources(resources, 'wise', 'sing-box', 'Source Rule Set'),
+    ),
+  ).toEqual([[json]]);
 });

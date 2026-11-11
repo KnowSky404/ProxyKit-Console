@@ -45,3 +45,7 @@ JSON 成功与错误响应使用 `Content-Type: application/json`、`Cache-Contr
 | 502  | `upstream_unavailable` | 网络、超时、重定向或其他上游故障    |
 
 浏览器按状态提供固定可读错误反馈。现有路径保持稳定；新增可选展示字段保留 V1，破坏字段语义、ID 或内容表示的修改必须先更新契约及版本。图片上传、任意 imageUrl、用户自定义 Provider 不属于此 API。
+
+## 展示聚合
+
+API 始终逐文件返回；JSON/SRS 各自有完整的 Resource、真实 ID、URL 和预览行为。sing-box 同路径主干的两种格式由前端在筛选后合并为一张卡片，格式选择只影响复制/详情的目标 Resource，不改变 API schema。客户端不得通过替换扩展名假设另一文件存在；只有目录里实际提供且符合筛选的格式可选。
