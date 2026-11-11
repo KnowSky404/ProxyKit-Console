@@ -1,6 +1,6 @@
 # 架构
 
-V1 实现数据流：Public GitHub tree → 本地同步脚本 → 已验证静态 Catalog → Worker `/api/catalog` → 浏览器 Provider → 搜索/列表/详情。文本预览：浏览器选中 catalog ID → `/api/resource?id=...` → Worker 精确匹配目录 → 固定 Public 仓库与 catalog commit 的 Raw 文件 → 有界 UTF-8 解码 → JSON → React 文本节点。浏览器复制的订阅 URL 跟随 main，预览固定 catalog SHA，详情明确提示两者区别。
+V1 实现数据流：Public GitHub tree → 本地同步脚本 → 已验证静态 Catalog → Worker `/api/catalog` → 浏览器 Provider → 搜索/卡片画廊/按需详情抽屉。文本预览：浏览器选中 catalog ID → `/api/resource?id=...` → Worker 精确匹配目录 → 固定 Public 仓库与 catalog commit 的 Raw 文件 → 有界 UTF-8 解码 → JSON → React 文本节点。浏览器复制的订阅 URL 跟随 main，预览固定 catalog SHA，详情明确提示两者区别。
 
 ## 已检查的上游状态（2026-11-05）
 
@@ -33,3 +33,9 @@ Worker 路由只接受 GET `/api/catalog` 和 `/api/resource`；其余 `/api/*` 
 ## 关键取舍
 
 不为静态 Public 目录引入数据库或缓存绑定；不生成规则、不转换 SRS。目录提交到 Git，保证 PR 可审查和离线构建。字体使用系统字体，不引入远程 CDN。主题仅保存非敏感偏好。工具链选用 React/Vite/Tailwind；cf 的 cloudflare.config.ts 集成当前需要官方 Vite 2 beta，锁定版本并以构建和本地 workerd 验证兼容性。若未来 beta 升级破坏兼容，先在分支验证而非线上升级。
+
+## 卡片与图标
+
+资源卡片从目录元数据直接复制 URL；详情抽屉仅在点击后挂载并读取预览，关闭后取消请求。原生 dialog 提供焦点隔离和 Esc 关闭，键盘聚焦卡片会显示快捷操作，触屏操作常显；减少动态效果偏好会关闭位移动画。App 管理筛选和选中 ID，详情继续拥有预览状态。
+
+Resource 增加可选 icon 标识，保持 schemaVersion=1；类型白名单与同步脚本映射由 Console 维护，图片在同源静态资源目录，缺失时使用文件图标。目录和详情响应均校验，禁止远程 image URL 或 SVG 内容。API 字段、错误、版本兼容及边界详见 [Console API](console-api.md)，素材来源见 [图标说明](icons.md)。

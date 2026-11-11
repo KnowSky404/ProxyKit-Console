@@ -1,4 +1,16 @@
 export type Platform = 'Loon' | 'Quantumult X' | 'sing-box';
+export const RESOURCE_ICON_IDS = [
+  'sidestore',
+  'youtube',
+  'binance',
+  'bitget-wallet',
+  'bybit',
+  'telegram',
+  'ur',
+  'wechat',
+  'wise',
+] as const;
+export type ResourceIconId = (typeof RESOURCE_ICON_IDS)[number];
 export type Category =
   | 'Rule'
   | 'Plugin'
@@ -21,6 +33,7 @@ export interface Resource {
   revision: string;
   updatedAt: string;
   size: number;
+  icon?: ResourceIconId;
 }
 export interface Catalog {
   schemaVersion: 1;

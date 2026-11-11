@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CopyButton } from '../../components/CopyButton';
+import { ResourceIcon } from '../../components/ResourceIcon';
+import { Icon } from '../../components/Icon';
 import type {
   Resource,
   ResourceDetail as Detail,
@@ -9,12 +11,26 @@ import { SubscriptionConfig } from '../subscriptions/SubscriptionConfig';
 export function ResourceDetail({
   resource,
   provider,
+  onClose,
 }: {
   resource: Resource;
   provider: ResourceProvider;
+  onClose: () => void;
 }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const [state, setState] = useState<{ detail?: Detail; error?: string }>({});
   const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const opener = document.activeElement;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      // React can detach the dialog before cleanup, preventing native focus restoration.
+      if (opener instanceof HTMLElement && opener.isConnected)
+        opener.focus({ preventScroll: true });
+    };
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     provider
@@ -28,81 +44,98 @@ export function ResourceDetail({
     return () => controller.abort();
   }, [resource.id, provider, attempt]);
   return (
-    <article className="detail panel" aria-label="Resource details">
-      <h2>{resource.name}</h2>
-      <p className="muted">
-        {resource.platform} · {resource.category} · .{resource.format}
-      </p>
-      <p className="path">
-        Path <code>{resource.path}</code>
-      </p>
-      <div className="actions">
-        <CopyButton text={resource.url}>Copy URL</CopyButton>
-        <a href={resource.url} target="_blank" rel="noreferrer">
-          {resource.format === 'srs' ? 'Download SRS ↗' : 'Open source ↗'}
-        </a>
-      </div>
-      <details className="metadata">
-        <summary>Source &amp; version</summary>
-        <p>{resource.description}</p>
-        <p>
-          {resource.repository} · {resource.size.toLocaleString()} bytes
+    <dialog
+      ref={dialogRef}
+      className="detail-dialog"
+      aria-labelledby="detail-title"
+      onCancel={onClose}
+    >
+      <article className="detail" aria-label="Resource details">
+        <div className="detail-heading">
+          <ResourceIcon resource={resource} />
+          <h2 id="detail-title">{resource.name}</h2>
+          <button
+            className="close-detail"
+            aria-label="Close details"
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+        <p className="muted">
+          {resource.platform} · {resource.category} · .{resource.format}
         </p>
-        <p>Snapshot time: {new Date(resource.updatedAt).toISOString()}</p>
-        <p>
-          Revision: <code>{resource.revision}</code>
+        <p className="path">
+          Path <code>{resource.path}</code>
         </p>
-        <p className="small">
-          Preview is pinned to this catalog revision. Subscription URLs follow
-          main.
-        </p>
-        <a
-          href={`https://github.com/${resource.repository}/blob/${resource.revision}/${resource.platform === 'Loon' ? 'loon' : resource.platform === 'Quantumult X' ? 'quantumultx' : 'sing-box'}/README.md`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Compatibility &amp; usage notes ↗
-        </a>
-      </details>
-      <section className="preview">
-        <h3>Preview</h3>
-        {resource.format === 'srs' ? (
-          <p className="muted">
-            Binary SRS rule set. Text preview and compilation are unavailable.
-            Download the original file or copy its URL.
+        <div className="actions">
+          <CopyButton text={resource.url}>Copy URL</CopyButton>
+          <a href={resource.url} target="_blank" rel="noreferrer">
+            {resource.format === 'srs' ? 'Download SRS ↗' : 'Open source ↗'}
+          </a>
+        </div>
+        <details className="metadata">
+          <summary>Source &amp; version</summary>
+          <p>{resource.description}</p>
+          <p>
+            {resource.repository} · {resource.size.toLocaleString()} bytes
           </p>
-        ) : state.error ? (
-          <div role="alert">
-            <p>{state.error}</p>
-            <button
-              onClick={() => {
-                setState({});
-                setAttempt(attempt + 1);
-              }}
-            >
-              Retry preview
-            </button>
-          </div>
-        ) : state.detail ? (
-          <>
-            <pre
-              className="preview-code"
-              tabIndex={0}
-              aria-label="Original file content"
-            >
-              <code>{state.detail.content}</code>
-            </pre>
-            <CopyButton text={state.detail.content ?? ''}>
-              Copy content
-            </CopyButton>
-          </>
-        ) : (
-          <p role="status" className="muted">
-            Loading preview…
+          <p>Snapshot time: {new Date(resource.updatedAt).toISOString()}</p>
+          <p>
+            Revision: <code>{resource.revision}</code>
           </p>
-        )}
-      </section>
-      <SubscriptionConfig resource={resource} />
-    </article>
+          <p className="small">
+            Preview is pinned to this catalog revision. Subscription URLs follow
+            main.
+          </p>
+          <a
+            href={`https://github.com/${resource.repository}/blob/${resource.revision}/${resource.platform === 'Loon' ? 'loon' : resource.platform === 'Quantumult X' ? 'quantumultx' : 'sing-box'}/README.md`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Compatibility &amp; usage notes ↗
+          </a>
+        </details>
+        <section className="preview">
+          <h3>Preview</h3>
+          {resource.format === 'srs' ? (
+            <p className="muted">
+              Binary SRS rule set. Text preview and compilation are unavailable.
+              Download the original file or copy its URL.
+            </p>
+          ) : state.error ? (
+            <div role="alert">
+              <p>{state.error}</p>
+              <button
+                onClick={() => {
+                  setState({});
+                  setAttempt(attempt + 1);
+                }}
+              >
+                Retry preview
+              </button>
+            </div>
+          ) : state.detail ? (
+            <>
+              <pre
+                className="preview-code"
+                tabIndex={0}
+                aria-label="Original file content"
+              >
+                <code>{state.detail.content}</code>
+              </pre>
+              <CopyButton text={state.detail.content ?? ''}>
+                Copy content
+              </CopyButton>
+            </>
+          ) : (
+            <p role="status" className="muted">
+              Loading preview…
+            </p>
+          )}
+        </section>
+        <SubscriptionConfig resource={resource} />
+      </article>
+    </dialog>
   );
 }

@@ -6,6 +6,7 @@ import {
   subscriptionUrl,
 } from '../src/lib/catalog';
 import { PUBLIC_SOURCE } from '../src/config/sources';
+import { resourceIcon } from '../src/config/resource-icons';
 import type { Catalog } from '../src/types/resource';
 
 function github(path: string): unknown {
@@ -52,6 +53,7 @@ const catalog: Catalog = {
         {
           id: entry.path,
           name,
+          icon: resourceIcon(entry.path),
           description: `${kind.platform} ${kind.category.toLowerCase()} from ProxyKit. Review the upstream README for compatibility and usage limits.`,
           ...kind,
           providerId: PUBLIC_SOURCE.id,

@@ -1,5 +1,6 @@
 import { PUBLIC_SOURCE } from '../config/sources';
 import type { Catalog, Category, Platform, Resource } from '../types/resource';
+import { RESOURCE_ICON_IDS } from '../types/resource';
 
 const patterns: [RegExp, Platform, Category][] = [
   [/^loon\/rules\/[a-z0-9-]+\.list$/, 'Loon', 'Rule'],
@@ -77,6 +78,8 @@ export function parseCatalog(input: unknown): Catalog {
       r.name.length > 160 ||
       typeof r.description !== 'string' ||
       r.description.length > 1000 ||
+      (r.icon !== undefined &&
+        !RESOURCE_ICON_IDS.some((id) => id === r.icon)) ||
       !Number.isSafeInteger(r.size) ||
       r.size < 0
     )

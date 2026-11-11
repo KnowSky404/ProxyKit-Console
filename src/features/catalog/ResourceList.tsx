@@ -1,54 +1,54 @@
 import type { Resource } from '../../types/resource';
+import { CopyButton } from '../../components/CopyButton';
+import { ResourceIcon } from '../../components/ResourceIcon';
+import { Icon } from '../../components/Icon';
+
 export function ResourceList({
   resources,
-  selectedId,
   onSelect,
 }: {
   resources: Resource[];
-  selectedId?: string;
   onSelect: (id: string) => void;
 }) {
   return (
-    <section className="resource-list panel" aria-label="Resources">
-      <div className="list-head">
-        <span>Resource</span>
-        <span>Platform</span>
-        <span>Category</span>
-        <span>Format</span>
-      </div>
+    <section className="resource-grid" aria-label="Resources">
       {resources.length === 0 ? (
         <p className="empty">No resources match your filters.</p>
       ) : (
         resources.map((r) => (
-          <button
-            type="button"
+          <article
             key={r.id}
-            className={`resource-row ${selectedId === r.id ? 'selected' : ''}`}
-            aria-pressed={selectedId === r.id}
-            onClick={() => onSelect(r.id)}
+            className="resource-card"
+            aria-label={`${r.name} · ${r.platform} · ${r.category}`}
           >
-            <span className="resource-name">
-              <span className="file-icon" aria-hidden="true">
-                <svg
-                  width="20"
-                  height="24"
-                  viewBox="0 0 20 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <path d="M3 1h9l5 5v17H3zM12 1v6h5M6 12h8M6 16h8" />
-                </svg>
-              </span>
-              <span>
+            <span className="card-platform">{r.platform}</span>
+            <button
+              className="card-main"
+              onClick={() => onSelect(r.id)}
+              aria-label={`View ${r.name} details`}
+            >
+              <ResourceIcon resource={r} />
+              <span className="card-info">
                 <strong>{r.name}</strong>
-                <small>{r.path}</small>
+                <span className="card-kind">
+                  {r.category} <span aria-hidden="true">·</span> .{r.format}
+                </span>
+                <span className="card-path">{r.path}</span>
               </span>
-            </span>
-            <span className="row-platform">{r.platform}</span>
-            <span className="row-category">{r.category}</span>
-            <span className="format">.{r.format}</span>
-          </button>
+            </button>
+            <div className="card-actions">
+              <CopyButton text={r.url}>
+                <Icon name="copy" /> Copy URL
+              </CopyButton>
+              <button
+                className="detail-link"
+                onClick={() => onSelect(r.id)}
+                aria-label={`View ${r.name} details`}
+              >
+                View details <Icon name="arrow" />
+              </button>
+            </div>
+          </article>
         ))
       )}
     </section>

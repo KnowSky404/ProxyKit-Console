@@ -29,3 +29,5 @@ Public V1 没有登录、不持有任何 GitHub 私人凭据或 Gateway 凭据�
 依赖更新要 review lockfile，保留精确版本。PR CI contents:read、checkout 不持久化凭据、不接收生产 Secret、不自动部署，不使用 pull_request_target 执行外部代码。部署者负责 Cloudflare 账号权限和生产域名/HTTPS。
 
 Public 上游不受 Console 控制；main 订阅可能变化、失效或包含恶意内容，Console 不替用户安装执行。预览固定 SHA 帮助复查，但不是对上游可信性的保证。发布前检查产物不含私人数据/凭据，未来新增认证必须更新威胁模型和测试。
+
+资源图标仅使用受版本控制的同源 SVG，API 的可选 icon 字段受固定 ID 白名单校验；不接受远程 URL、SVG 文本或 HTML。缺失文件回退，不建立图片代理。浏览器详情响应校验复用 catalog 来源/路径/URL 规则，并校验请求 ID、文本类型与 128 KiB 字节上限。卡片复制不加载远程预览。

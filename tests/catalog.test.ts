@@ -90,3 +90,30 @@ describe('public catalog trust boundary', () => {
     expect(filterResources([], '', '', '')).toEqual([]);
   });
 });
+
+it('supports optional reviewed icon IDs, rejects image URLs and ships every mapped asset', async () => {
+  const { RESOURCE_ICON_IDS } = await import('../src/types/resource');
+  const { resourceIcon } = await import('../src/config/resource-icons');
+  const { existsSync } = await import('node:fs');
+  const legacy = { ...catalog.resources[0], icon: undefined };
+  expect(
+    parseCatalog({ ...catalog, resources: [legacy] }).resources[0].icon,
+  ).toBeUndefined();
+  for (const icon of [
+    'https://evil.test/a.svg',
+    '../private',
+    '',
+    null,
+    4,
+    '<svg/>',
+  ]) {
+    expect(() =>
+      parseCatalog({ ...catalog, resources: [{ ...legacy, icon }] }),
+    ).toThrow();
+  }
+  expect(resourceIcon('loon/rules/unknown.list')).toBeUndefined();
+  expect(resourceIcon('loon/scripts/youtube/request.js')).toBe('youtube');
+  for (const icon of RESOURCE_ICON_IDS)
+    expect(existsSync(`public/icons/${icon}.svg`)).toBe(true);
+  for (const r of catalog.resources) expect(r.icon).toBe(resourceIcon(r.path));
+});

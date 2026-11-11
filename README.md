@@ -6,7 +6,7 @@ V1 是独立部署的 **Public 资源浏览与复制控制台**，不是规则�
 
 当前真实目录来自 [KnowSky404/ProxyKit](https://github.com/KnowSky404/ProxyKit)：34 个资源，覆盖 Loon `.list` / `.plugin` / `.js`、Quantumult X `.list`、sing-box `.json` / `.srs`。QX rewrite/script 目录目前仅含占位文件，界面不会虚构资源。
 
-已实现全局搜索、平台/分类过滤、详情、文本预览、内容/URL/配置复制、SRS 下载链接、浅深色主题及移动端布局。Loon Remote Rule、QX filter_remote（用户输入 force-policy）、sing-box source/binary route.rule_set 均提供片段；脚本和插件仅提供 URL 与使用限制。策略必须来自用户输入，不默认绑定 DIRECT/PROXY。
+已实现响应式资源卡片画廊、资源图标、全局搜索、平台/分类过滤、按需详情抽屉、文本预览、内容/URL/配置复制、SRS 下载链接、浅深色主题及移动端布局。桌面卡片 hover 或键盘聚焦时显示复制操作，触屏直接显示；点击详情才读取预览，Esc/关闭按钮可返回卡片。Loon Remote Rule、QX filter_remote（用户输入 force-policy）、sing-box source/binary route.rule_set 均提供片段；脚本和插件仅提供 URL 与使用限制。策略必须来自用户输入，不默认绑定 DIRECT/PROXY。
 
 React + TypeScript + Vite + Tailwind CSS；同一个 Cloudflare Worker 提供静态资源与 Console API。Bun 管理精确锁定的依赖；Vitest、Testing Library、Playwright、ESLint、Prettier 和 GitHub Actions 提供质量检查。没有数据库、后台进程或外部缓存服务。
 
@@ -64,6 +64,8 @@ bun run deploy
 
 - [架构与现有生态能力](docs/architecture.md)
 - [目录同步](docs/catalog.md)
+- [Console API 契约](docs/console-api.md)
+- [图标来源与回退](docs/icons.md)
 - [客户端语法依据与限制](docs/client-configs.md)
 - [未来 Gateway 协议草案](docs/gateway-protocol.md)
 - [安全与三类身份边界](docs/security.md)
